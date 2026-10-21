@@ -69,14 +69,19 @@ class VCF_Frontend_Filter {
 				$saved_year = get_user_meta( $user_id, '_vcf_saved_year', true );
 				
 				if ( $saved_make && $saved_model && $saved_year ) :
-					$make_name = get_term( $saved_make )->name;
-					$model_name = get_term( $saved_model )->name;
-					$year_name = get_term( $saved_year )->name;
+					$make_term = get_term( $saved_make );
+					$model_term = get_term( $saved_model );
+					$year_term = get_term( $saved_year );
+
+					if ( $make_term && $model_term && $year_term ) :
+						$make_name = $make_term->name;
+						$model_name = $model_term->name;
+						$year_name = $year_term->name;
 			?>
 				<div style="background: #ecfdf3; border: 1px solid #b7ebc6; padding: 10px; border-radius: 6px; margin-bottom: 15px;">
 					<strong>Your Saved Vehicle:</strong> <?php echo esc_html( $make_name . ' ' . $model_name . ' (' . $year_name . ')' ); ?>
 				</div>
-			<?php endif; endif; ?>
+			<?php endif; endif; endif; ?>
 
 			<div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px;">
 				<div>
@@ -153,22 +158,28 @@ class VCF_Frontend_Filter {
 		);
 
 		if ( ! $is_compatible ) {
-			$make_name  = get_term( $saved_make )->name;
-			$model_name = get_term( $saved_model )->name;
-			$year_name  = get_term( $saved_year )->name;
+			$make_term = get_term( $saved_make );
+			$model_term = get_term( $saved_model );
+			$year_term = get_term( $saved_year );
 
-			echo '<div style="background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; padding: 15px; border-radius: 8px; margin-bottom: 20px;">';
-			echo '<strong>⚠️ Compatibility Warning:</strong> This part may not fit your saved vehicle (' . esc_html( $make_name . ' ' . $model_name . ' ' . $year_name ) . '). Please verify before purchasing.';
-			echo '</div>';
+			if ( $make_term && $model_term && $year_term ) {
+				$make_name = $make_term->name;
+				$model_name = $model_term->name;
+				$year_name = $year_term->name;
+
+				echo '<div style="background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; padding: 15px; border-radius: 8px; margin-bottom: 20px;">';
+				echo '<strong>⚠️ Compatibility Warning:</strong> This part may not fit your saved vehicle (' . esc_html( $make_name . ' ' . $model_name . ' ' . $year_name ) . '). Please verify before purchasing.';
+				echo '</div>';
+			}
 		}
 	}
 
 	public static function ajax_filter_products() {
 		check_ajax_referer( 'vcf_ajax_nonce', 'nonce' );
 
-		$make_id  = isset( $_POST['make_id'] ) ? absint( $_POST['make_id'] ) : 0;
-		$model_id = isset( $_POST['model_id'] ) ? absint( $_POST['model_id'] ) : 0;
-		$year_id  = isset( $_POST['year_id'] ) ? absint( $_POST['year_id'] ) : 0;
+		$make_id  = isset( $_POST['make_id'] ) ? absint( wp_unslash( $_POST['make_id'] ) ) : 0;
+		$model_id = isset( $_POST['model_id'] ) ? absint( wp_unslash( $_POST['model_id'] ) ) : 0;
+		$year_id  = isset( $_POST['year_id'] ) ? absint( wp_unslash( $_POST['year_id'] ) ) : 0;
 
 		if ( ! $make_id && ! $model_id && ! $year_id ) {
 			wp_send_json_error( array( 'message' => 'Please select at least one vehicle detail.' ) );
@@ -227,14 +238,14 @@ class VCF_Frontend_Filter {
 	public static function ajax_save_vehicle() {
 		check_ajax_referer( 'vcf_ajax_nonce', 'nonce' );
 
-		if ( ! is_user_logged_in() ) {
+		if ( ! is_user_logged_in() || ! current_user_can( 'read' ) ) {
 			wp_send_json_error( array( 'message' => 'You must be logged in to save your vehicle.' ) );
 		}
 
 		$user_id = get_current_user_id();
-		$make_id  = isset( $_POST['make_id'] ) ? absint( $_POST['make_id'] ) : 0;
-		$model_id = isset( $_POST['model_id'] ) ? absint( $_POST['model_id'] ) : 0;
-		$year_id  = isset( $_POST['year_id'] ) ? absint( $_POST['year_id'] ) : 0;
+		$make_id  = isset( $_POST['make_id'] ) ? absint( wp_unslash( $_POST['make_id'] ) ) : 0;
+		$model_id = isset( $_POST['model_id'] ) ? absint( wp_unslash( $_POST['model_id'] ) ) : 0;
+		$year_id  = isset( $_POST['year_id'] ) ? absint( wp_unslash( $_POST['year_id'] ) ) : 0;
 
 		if ( ! $make_id || ! $model_id || ! $year_id ) {
 			wp_send_json_error( array( 'message' => 'Please select Make, Model, and Year first.' ) );

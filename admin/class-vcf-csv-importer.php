@@ -87,6 +87,23 @@ class VCF_CSV_Importer {
 			exit;
 		}
 
+		// Validate file extension and MIME type
+		$file_name = sanitize_file_name( $_FILES['vcf_csv_file']['name'] );
+		$file_ext  = strtolower( pathinfo( $file_name, PATHINFO_EXTENSION ) );
+
+		if ( 'csv' !== $file_ext ) {
+			wp_safe_redirect( add_query_arg( 'import_error', 'Invalid file type. Please upload a .csv file.', admin_url( 'edit.php?post_type=product&page=vcf-csv-importer' ) ) );
+			exit;
+		}
+
+		$file_info = wp_check_filetype_and_ext( $_FILES['vcf_csv_file']['tmp_name'], $file_name );
+		$allowed_mimes = array( 'text/csv', 'text/plain', 'application/csv', 'application/vnd.ms-excel' );
+
+		if ( ! in_array( $file_info['type'], $allowed_mimes, true ) && 'csv' !== $file_info['ext'] ) {
+			wp_safe_redirect( add_query_arg( 'import_error', 'Invalid MIME type.', admin_url( 'edit.php?post_type=product&page=vcf-csv-importer' ) ) );
+			exit;
+		}
+
 		$file = $_FILES['vcf_csv_file']['tmp_name'];
 		$handle = fopen( $file, 'r' );
 
@@ -97,7 +114,7 @@ class VCF_CSV_Importer {
 
 		$header = fgetcsv( $handle ); // Read the header row
 
-		if ( $header[0] !== 'SKU' || $header[1] !== 'Make' || $header[2] !== 'Model' || $header[3] !== 'Year' ) {
+		if ( ! $header || $header[0] !== 'SKU' || $header[1] !== 'Make' || $header[2] !== 'Model' || $header[3] !== 'Year' ) {
 			fclose( $handle );
 			wp_safe_redirect( add_query_arg( 'import_error', 'Invalid CSV header. Please use: SKU, Make, Model, Year', admin_url( 'edit.php?post_type=product&page=vcf-csv-importer' ) ) );
 			exit;
