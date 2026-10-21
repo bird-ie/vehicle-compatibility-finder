@@ -31,9 +31,11 @@ jQuery(document).ready(function($) {
 				btn.text('Filter Products').prop('disabled', false);
 
 				if (response.success) {
-					$('.products').html(response.data.html);
+					$('#vcf-product-grid').html(response.data.html);
 					msg.css('color', 'green').text('Showing ' + response.data.count + ' compatible products.');
 				} else {
+					// If no products found, clear the grid and show the error message
+					$('#vcf-product-grid').html('<p class="woocommerce-info">No products were found matching your vehicle.</p>');
 					msg.css('color', 'red').text(response.data.message);
 				}
 			},

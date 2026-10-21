@@ -10,6 +10,10 @@ class VCF_Frontend_Filter {
 		// Add the vehicle selector widget above the shop loop
 		add_action( 'woocommerce_before_shop_loop', array( __CLASS__, 'render_vehicle_widget' ), 10 );
 		
+		// Wrap the product loop in a custom container for AJAX replacement
+		add_action( 'woocommerce_before_shop_loop', array( __CLASS__, 'open_product_grid' ), 15 );
+		add_action( 'woocommerce_after_shop_loop', array( __CLASS__, 'close_product_grid' ), 15 );
+
 		// Enqueue JS for AJAX filtering
 		add_action( 'wp_enqueue_scripts', array( __CLASS__, 'enqueue_scripts' ) );
 		
@@ -89,6 +93,14 @@ class VCF_Frontend_Filter {
 		<?php
 	}
 
+	public static function open_product_grid() {
+		echo '<div id="vcf-product-grid">';
+	}
+
+	public static function close_product_grid() {
+		echo '</div>';
+	}
+
 	public static function ajax_filter_products() {
 		check_ajax_referer( 'vcf_ajax_nonce', 'nonce' );
 
@@ -137,10 +149,12 @@ class VCF_Frontend_Filter {
 		}
 
 		ob_start();
+		woocommerce_product_loop_start();
 		while ( $query->have_posts() ) {
 			$query->the_post();
 			wc_get_template_part( 'content', 'product' );
 		}
+		woocommerce_product_loop_end();
 		wp_reset_postdata();
 
 		$html = ob_get_clean();
