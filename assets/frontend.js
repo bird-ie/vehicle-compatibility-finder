@@ -1,4 +1,5 @@
 jQuery(document).ready(function($) {
+	// Filter Products Button
 	$('#vcf_filter_btn').on('click', function(e) {
 		e.preventDefault();
 
@@ -34,8 +35,6 @@ jQuery(document).ready(function($) {
 					$('#vcf-product-grid').html(response.data.html);
 					msg.css('color', 'green').text('Showing ' + response.data.count + ' compatible products.');
 				} else {
-					// If no products found, clear the grid and show the error message
-					$('#vcf-product-grid').html('<p class="woocommerce-info">No products were found matching your vehicle.</p>');
 					msg.css('color', 'red').text(response.data.message);
 				}
 			},
@@ -54,5 +53,50 @@ jQuery(document).ready(function($) {
 		$('#vcf_year_filter').val('');
 		$('#vcf_filter_message').text('');
 		location.reload();
+	});
+
+	// Save Vehicle Button
+	$('#vcf_save_vehicle_btn').on('click', function(e) {
+		e.preventDefault();
+		var btn = $(this);
+		var msg = $('#vcf_filter_message');
+
+		var makeId  = $('#vcf_make_filter').val();
+		var modelId = $('#vcf_model_filter').val();
+		var yearId  = $('#vcf_year_filter').val();
+
+		if (!makeId || !modelId || !yearId) {
+			msg.css('color', 'red').text('Please select Make, Model, and Year before saving.');
+			return;
+		}
+
+		btn.text('Saving...').prop('disabled', true);
+
+		$.ajax({
+			url: vcfAjax.ajaxUrl,
+			type: 'POST',
+			dataType: 'json',
+			data: {
+				action: 'vcf_save_vehicle',
+				nonce: vcfAjax.nonce,
+				make_id: makeId,
+				model_id: modelId,
+				year_id: yearId
+			},
+			success: function(response) {
+				btn.text('Save My Vehicle').prop('disabled', false);
+				if (response.success) {
+					msg.css('color', 'green').text(response.data.message);
+					// Reload to show the saved vehicle banner
+					setTimeout(function() { location.reload(); }, 1000);
+				} else {
+					msg.css('color', 'red').text(response.data.message);
+				}
+			},
+			error: function() {
+				btn.text('Save My Vehicle').prop('disabled', false);
+				msg.css('color', 'red').text('Could not save vehicle.');
+			}
+		});
 	});
 });
