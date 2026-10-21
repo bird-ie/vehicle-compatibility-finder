@@ -20,9 +20,11 @@ define( 'VCF_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 
 require_once VCF_PLUGIN_DIR . 'includes/class-vcf-taxonomies.php';
 require_once VCF_PLUGIN_DIR . 'includes/class-vcf-admin-meta.php';
+require_once VCF_PLUGIN_DIR . 'includes/class-vcf-frontend-filter.php';
 
 function vcf_run_plugin() {
 	VCF_Taxonomies::init();
 	VCF_Admin_Meta::init();
+	VCF_Frontend_Filter::init();
 }
 add_action( 'plugins_loaded', 'vcf_run_plugin' );
